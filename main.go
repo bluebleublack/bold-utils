@@ -99,23 +99,23 @@ func weiToGwei(wei *big.Int) *big.Int {
 }
 
 func mintStakeToken() {
-	// Your existing logic goes here
-	// You can use the flag variables like valPrivKeys, l1ChainIdStr, etc., directly here
 	ctx := context.Background()
+
 	endpoint, err := rpc.DialContext(ctx, l1EndpointUrl)
 	if err != nil {
 		panic(err)
 	}
 	client := ethclient.NewClient(endpoint)
+
 	l1ChainId, ok := new(big.Int).SetString(l1ChainIdStr, 10)
 	if !ok {
 		panic("not big int")
 	}
+
 	if valPrivKeys == "" {
 		panic("no validator private keys set")
 	}
-	fmt.Println("Now minting the stake token required for BOLD assertion posting and challenge participation")
-	fmt.Println("This command will convert the specified amount of testnet ETH into a WETH ERC-20 stake token")
+
 	privKeyStrings := strings.Split(valPrivKeys, ",")
 	for _, privKeyStr := range privKeyStrings {
 		validatorPrivateKey, err := crypto.HexToECDSA(privKeyStr)
@@ -126,15 +126,18 @@ func mintStakeToken() {
 		if err != nil {
 			panic(err)
 		}
+
 		suggested, err := client.SuggestGasPrice(ctx)
 		if err != nil {
 			panic(err)
 		}
+
 		nonce, err := client.PendingNonceAt(ctx, txOpts.From)
 		if err != nil {
 			panic(err)
 		}
 		txOpts.Nonce = new(big.Int).SetUint64(nonce)
+
 		fmt.Printf("Suggested gas price: %s gwei, bumping by %d percent\n", weiToGwei(suggested).String(), bumpPricePercent)
 		txOpts.GasPrice = bumpGasPrice(suggested)
 		fmt.Printf("Bumped to price: %s gwei\n", weiToGwei(txOpts.GasPrice).String())
@@ -165,6 +168,7 @@ func mintStakeToken() {
 			panic(err)
 		}
 		fmt.Printf("Sent token minting tx with hash %#x\n", tx.Hash())
+
 		txOpts.Value = big.NewInt(0)
 		maxUint256 := new(big.Int)
 		maxUint256.Exp(big.NewInt(2), big.NewInt(256), nil).Sub(maxUint256, big.NewInt(1))
